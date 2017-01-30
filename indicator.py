@@ -90,7 +90,7 @@ class ToDoIndicator(object):
                 if  len(self.itemList) >= 1 :
                     for item in self.itemList:
                         #print str(myItem.__dict__)
-                        if item.category == None:
+                        if item.category == None or item.category == "":
                             itemListSub=Gtk.MenuItem(item.name)
                             subMenu=Gtk.Menu()
                             itemListSub.set_submenu(subMenu)
@@ -104,8 +104,25 @@ class ToDoIndicator(object):
                                 categoryDict[item.category].append(item)
                             else:
                                 categoryDict[item.category]=[item]
-                print categoryDict
- 
+                categorySeperator = Gtk.SeparatorMenuItem()
+                categoryMenus = []
+                if len(categoryDict) >= 1:
+                    for catName in list(categoryDict.keys()):
+                        categoryMenu = Gtk.MenuItem(catName)
+                        catSubMenu = Gtk.Menu()
+                        categoryMenu.set_submenu(catSubMenu)
+                        for item in categoryDict[catName]:
+                            itemListSub=Gtk.MenuItem(item.name)
+                            subMenu=Gtk.Menu()
+                            itemListSub.set_submenu(subMenu)
+                            deleteItem = Gtk.MenuItem("Delete")
+                            deleteItem.connect('activate',item.delete,self)
+                            subMenu.append(deleteItem)
+                            catSubMenu.append(itemListSub)
+                        categoryMenus.append(categoryMenu)
+
+
+                        
                 itemAdder = Gtk.MenuItem("Add Item")
                 itemAdder.connect("activate", lambda x: AddItemPopup()) #We have to use a lambda because... Python.
  
@@ -116,7 +133,10 @@ class ToDoIndicator(object):
     
                 exit = Gtk.MenuItem("Exit")
                 exit.connect('activate', Gtk.main_quit)
- 
+                if len(categoryMenus) >= 1:
+                    for categoryMenu in categoryMenus:
+                        self.menu.append(categoryMenu)
+
                 if len(self.itemList) >=1 : #Append all the items in the list
                         for menuItem in menuItemList:
                                 self.menu.append(menuItem)
@@ -167,6 +187,7 @@ class Item(object):
 
  
 global storageLocation
+global theActualPath
 theActualPath = os.path.dirname(os.path.realpath(__file__))
 storageLocation = theActualPath + "/data.json"
 indicator = ToDoIndicator()
