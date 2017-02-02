@@ -1,5 +1,5 @@
 #!/usr/bin/python
- 
+#David Finder
 from gi.repository import AppIndicator3 as AppIndicator
 from gi.repository import Notify
 from gi.repository import Gtk
@@ -48,6 +48,22 @@ class AddItemPopup(Gtk.Window): #We need this to be destructable, so we make it 
     def quit(self,window,connection):
             Gtk.Widget.destroy(self) #Destroy self. This is necessary so we don't quit the application as a whole
  
+class ChangeCategoryPopup(Gtk.Window):
+    def __init__(self,item):
+        super(AddItemPopup,self).__init__()
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_title("Change Category")
+        self.set_border_width(20)
+        self.connect('delete-event',self.quit)
+        self.table = Gtk.Grid()
+        self.add(self.table)
+        self.categoryField = Gtk.Entry()
+        self.categoryField.set_text(item.Category)
+        self.submitButton = Gtk.Button(label="Set",stock=None)
+        self.submitButton.connect("clicked", item.changeCategory)
+    def quit(self, window,connection)
+        Gtk.Widget.destroy(self)
+
 class ToDoIndicator(object):
         def __init__(self):
                 self.ind = AppIndicator.Indicator.new("Reminder Application",
@@ -96,6 +112,8 @@ class ToDoIndicator(object):
                             itemListSub.set_submenu(subMenu)
                             deleteItem = Gtk.MenuItem("Delete")
                             deleteItem.connect('activate',item.delete,self)
+                            changeCategoryItem = Gtk.MenuItem("Change Category")
+                            changeCategoryItem.connect('active', item.changeCategory, self, item)
                             subMenu.append(deleteItem)
                             menuItemList.append(itemListSub)
                         else:
@@ -117,6 +135,8 @@ class ToDoIndicator(object):
                             itemListSub.set_submenu(subMenu)
                             deleteItem = Gtk.MenuItem("Delete")
                             deleteItem.connect('activate',item.delete,self)
+                            changeCategoryItem = Gtk.MenuItem("Change Category")
+                            changeCategoryItem.connect('active', item.changeCategory, self, item)
                             subMenu.append(deleteItem)
                             catSubMenu.append(itemListSub)
                         categoryMenus.append(categoryMenu)
@@ -184,6 +204,7 @@ class Item(object):
                 indicator.itemList.remove(self) #Remove the item from our local copy
                 myFile.close()
                 indicator.render() #Re-render the applet, now that we have altered the view
+        def changeCategory(self, connection, indicator)
 
  
 global storageLocation
