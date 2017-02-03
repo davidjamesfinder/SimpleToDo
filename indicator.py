@@ -61,7 +61,7 @@ class ChangeCategoryPopup(Gtk.Window):
         self.categoryField.set_text(item.Category)
         self.submitButton = Gtk.Button(label="Set",stock=None)
         self.submitButton.connect("clicked", item.changeCategory)
-    def quit(self, window,connection)
+    def quit(self, window,connection):
         Gtk.Widget.destroy(self)
 
 class ToDoIndicator(object):
@@ -113,7 +113,7 @@ class ToDoIndicator(object):
                             deleteItem = Gtk.MenuItem("Delete")
                             deleteItem.connect('activate',item.delete,self)
                             changeCategoryItem = Gtk.MenuItem("Change Category")
-                            changeCategoryItem.connect('active', item.changeCategory, self, item)
+                            changeCategoryItem.connect('activate', item.changeCategory, self, item)
                             subMenu.append(deleteItem)
                             menuItemList.append(itemListSub)
                         else:
@@ -136,7 +136,7 @@ class ToDoIndicator(object):
                             deleteItem = Gtk.MenuItem("Delete")
                             deleteItem.connect('activate',item.delete,self)
                             changeCategoryItem = Gtk.MenuItem("Change Category")
-                            changeCategoryItem.connect('active', item.changeCategory, self, item)
+                            changeCategoryItem.connect('activate', item.changeCategory, self, item)
                             subMenu.append(deleteItem)
                             catSubMenu.append(itemListSub)
                         categoryMenus.append(categoryMenu)
@@ -204,7 +204,8 @@ class Item(object):
                 indicator.itemList.remove(self) #Remove the item from our local copy
                 myFile.close()
                 indicator.render() #Re-render the applet, now that we have altered the view
-        def changeCategory(self, connection, indicator)
+        def changeCategory(self, connection, indicator):
+            pass
 
  
 global storageLocation
