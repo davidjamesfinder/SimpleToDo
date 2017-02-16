@@ -11,6 +11,8 @@ import ast
 import time
 import thread
 import uuid
+import boto3
+import re
 class AddItemPopup(Gtk.Window): #We need this to be destructable, so we make it its own class.
     def __init__(self):
         super(AddItemPopup,self).__init__() #Inherits constructor from GTK window
@@ -61,6 +63,7 @@ class ChangeCategoryPopup(Gtk.Window):
         self.categoryField.set_text(item.Category)
         self.submitButton = Gtk.Button(label="Set",stock=None)
         self.submitButton.connect("clicked", item.changeCategory)
+        self.show_all()
     def quit(self, window,connection):
         Gtk.Widget.destroy(self)
 
@@ -80,7 +83,7 @@ class ToDoIndicator(object):
                         #For whatever reason, there isn't a good way to essentially unfreeze objects from a data-store. Pickling doesn't work with objects, JSONPickle doesn't unformat properly, but does provide easily readable data
                         self.file = open(storageLocation, 'r') #Read the file, read only.
                         for line in self.file: #For each of the lines...
-                                print line
+                                #print line
                                 if not line.isspace(): #If we don't have a single line
                                                 #print json.loads(line)
                                                 #myLine=type('NewItem', (object,), )  #Interpret our JSON line as an array, and construct this as an instance of a new object. We can't simply construct an instance of our old object
@@ -95,9 +98,17 @@ class ToDoIndicator(object):
                 self.render() #Render
  
         def notification(self, MenuItem): #This is a sample notification test
-                Notify.init("Hello World")
-                Test=Notify.Notification.new("Hello World", "This is an example notification")
-                Test.show()
+                settings = open(theActualPath+"/settings")
+                
+                for line in settings:
+                    print line
+                    pattern = re.compile('"(.*?)"')
+                    number = pattern.search(line).group(0).strip("\"")
+                    response = client.publish(PhoneNumber=number, Message="<Insert MessageHere>")
+                    return 0
+                #Notify.init("Hello World")
+                #Test=Notify.Notification.new("Hello World", "This is an example notification")
+                #Test.show()
  
         def render(self):
                 self.menu = Gtk.Menu()
@@ -114,10 +125,11 @@ class ToDoIndicator(object):
                             deleteItem.connect('activate',item.delete,self)
                             changeCategoryItem = Gtk.MenuItem("Change Category")
                             changeCategoryItem.connect('activate', item.changeCategory, self, item)
+                            subMenu.append(changeCategoryItem)
                             subMenu.append(deleteItem)
                             menuItemList.append(itemListSub)
                         else:
-                            print item
+                            #print item
                             if item.category in list(categoryDict.keys()):
                                 categoryDict[item.category].append(item)
                             else:
@@ -137,6 +149,7 @@ class ToDoIndicator(object):
                             deleteItem.connect('activate',item.delete,self)
                             changeCategoryItem = Gtk.MenuItem("Change Category")
                             changeCategoryItem.connect('activate', item.changeCategory, self, item)
+                            subMenu.append(changeCategoryItem)
                             subMenu.append(deleteItem)
                             catSubMenu.append(itemListSub)
                         categoryMenus.append(categoryMenu)
@@ -192,25 +205,39 @@ class Item(object):
         #    myFile.write(encodement)
         #    myFile.write("\n")       
         #    myFile.close()
+        def notify(self):
+
+
+            response = client.publish(PhoneNumber=number, Message="<InsertMessageHere>")
         def delete(self,connection,indicator):
-                myFile = open(storageLocation, 'r')
-                lines=myFile.readlines() #Read all the lines from our file
-                myFile.close() #Is this necessary?
-                myFile=open(storageLocation,'w') #Delete the data, so that we can conveniently rewrite it
-                for line in lines: #For each of the lines in the file
-                        if self.id.hex not in line: #If the name of our item isn't in the line, don't write
-                            if line != '\n': #Don't write extraneous lines. These mainly occur if we delete a line in the middle.
-                                myFile.write(line) #But write all the other lines
-                indicator.itemList.remove(self) #Remove the item from our local copy
-                myFile.close()
-                indicator.render() #Re-render the applet, now that we have altered the view
+            myFile = open(storageLocation, 'r')
+            lines=myFile.readlines() #Read all the lines from our file
+            myFile.close() #Is this necessary?
+            myFile=open(storageLocation,'w') #Delete the data, so that we can conveniently rewrite it
+            for line in lines: #For each of the lines in the file
+                    if self.id.hex not in line: #If the name of our item isn't in the line, don't write
+                        if line != '\n': #Don't write extraneous lines. These mainly occur if we delete a line in the middle.
+                            myFile.write(line) #But write all the other lines
+            indicator.itemList.remove(self) #Remove the item from our local copy
+            myFile.close()
+            indicator.render() #Re-render the applet, now that we have altered the view
         def changeCategory(self, connection, indicator):
             pass
 
  
 global storageLocation
 global theActualPath
+global client 
+global phoneNumber
+
+client = boto3.client('sns')
 theActualPath = os.path.dirname(os.path.realpath(__file__))
+
+settings = open(theActualPath+"/settings")
+settingsLines = settings.readlines()
+line = settingsLines[0]
+pattern = re.compile('"(.*?)"')
+phoneNumber = pattern.search(line).group(0).strip("\"")
 storageLocation = theActualPath + "/data.json"
 indicator = ToDoIndicator()
 #thread.start_new_thread #For when I get around to implimenting threading
